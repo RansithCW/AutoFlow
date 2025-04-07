@@ -106,3 +106,222 @@ Connections Type: main
 Parameters: 
   - resource: "ticket", "company", "contact", "conversation", "deal"
   - operation: "get", "create", "delete", "property change", "privacy delete", "new message"
+
+
+@n8n/n8n-nodes-langchain.agent
+Executes an AI agent with tools and memory for complex tasks.
+Connections Type: main, ai_tool, ai_memory, ai_languageModel
+Parameters:
+  text: Input text e.g. "={{ $json.chatInput }}"
+  options:
+  systemMessage: Instructions e.g. "=You are a friendly AI assistant..."
+
+@n8n/n8n-nodes-langchain.lmChatOpenAi
+Integrates OpenAI’s chat models for language processing.
+Connections Type: ai_languageModel
+Parameters:
+  model: Model name e.g. "deepseek-chat"
+  options: Additional settings (often empty) e.g. {}
+
+@n8n/n8n-nodes-langchain.memoryBufferWindow
+Stores conversation history for context in AI interactions.
+Connections Type: ai_memory
+Parameters:
+  sessionKey: Unique session ID e.g. "={{ $json.sessionId }}"
+  contextWindowLength: Number of messages to retain e.g. 50
+
+@n8n/n8n-nodes-langchain.toolWikipedia
+Fetches information from Wikipedia as an AI tool.
+Connections Type: ai_tool
+Parameters: (typically none beyond defaults)
+
+@n8n/n8n-nodes-langchain.lmChatOpenRouter
+Uses OpenRouter to access various language models.
+Connections Type: ai_languageModel
+Parameters:
+  model: Model name e.g. "google/gemini-2.0-flash-001"
+  options: (often empty) e.g. {}
+
+n8n-nodes-base.googleDocsTool
+Custom tool for saving data to Google Docs (used with AI agents).
+Connections Type: ai_tool
+Parameters:
+  operation: "update"
+  documentURL: "[Google Doc ID]"
+  actionsUi:
+  actionFields:
+  text: JSON data e.g. "={ "memory": "{{ $fromAI('memory') }}", "date": "{{ $now }}" }"
+  action: "insert"
+
+n8n-nodes-base.n8n
+Interacts with the n8n API to manage workflows or retrieve data.
+Connections Type: main
+Parameters:
+  operation: "get" or "list" e.g. "get"
+  workflowId: Workflow ID e.g. "={{ $json.id }}"
+
+
+#ACTIONS
+n8n-nodes-base.set
+Sets or modifies data in the workflow, allowing assignment of new values to fields.
+Connections Type: main
+Parameters:
+
+assignments:
+assignments:
+name: Field name e.g. "output"
+type: Data type e.g. "string"
+value: Expression or static value e.g. "={{ $json.output }}"
+includeOtherFields: true or false e.g. true (keeps other fields intact)
+n8n-nodes-base.httpRequest
+Makes an HTTP request to an external API or service.
+Connections Type: main
+Parameters:
+
+url: Target URL e.g. "https://api.telegram.org/bot{token}/setWebhook?url={endpoint}"
+method: HTTP method e.g. "POST" or "PUT"
+sendBody: true or false e.g. true
+bodyParameters:
+parameters:
+name: "key" e.g. "q"
+value: "={{ $json.chunk }}"
+n8n-nodes-base.telegram
+Sends messages or interacts with Telegram.
+Connections Type: main
+Parameters:
+
+text: Message content e.g. "={{ $json.output }}"
+chatId: Target chat ID e.g. "=1234567891"
+additionalFields:
+parse_mode: "HTML" (optional formatting)
+n8n-nodes-base.stickyNote
+Adds a note for documentation within the workflow (no functional output).
+Connections Type: none
+Parameters:
+
+content: Note text e.g. "## Save Long Term Memories\nGoogle Docs"
+color: Color code e.g. 4
+width: Width in pixels e.g. 280
+height: Height in pixels e.g. 380
+n8n-nodes-base.if
+Conditionally routes the workflow based on specified conditions.
+Connections Type: main
+Parameters:
+
+conditions:
+combinator: "and" or "or" e.g. "and"
+conditions:
+leftValue: Expression e.g. "={{ $json.body.message.from.id }}"
+operator: Comparison type e.g. {"type": "number", "operation": "equals"}
+rightValue: Value to compare e.g. "={{ $json.id }}"
+n8n-nodes-base.merge
+Merges data from multiple inputs into a single output.
+Connections Type: main
+Parameters:
+
+mode: Merge mode e.g. "combine"
+combineBy: "combineByPosition" (how to align inputs)
+options:
+includeUnpaired: true or false e.g. true
+n8n-nodes-base.splitInBatches
+Splits data into smaller batches for processing.
+Connections Type: main
+Parameters:
+
+options: Additional settings (often empty) e.g. {}
+n8n-nodes-base.code
+Executes custom JavaScript code to manipulate data.
+Connections Type: main
+Parameters:
+
+jsCode: Custom script e.g. "return [{ json: { output: $json.text } }]"
+n8n-nodes-base.filter
+Filters items based on specified conditions.
+Connections Type: main
+Parameters:
+
+conditions:
+conditions:
+leftValue: Expression e.g. "={{ $json.callers.length }}"
+operator: {"type": "number", "operation": "gt"}
+rightValue: 0
+n8n-nodes-base.aggregate
+Aggregates data into a single item, often combining fields.
+Connections Type: main
+Parameters:
+
+fieldsToAggregate:
+fieldToAggregate:
+fieldToAggregate: Field name e.g. "name"
+n8n-nodes-base.switch
+Routes data to different outputs based on conditions.
+Connections Type: main
+Parameters:
+
+rules:
+values:
+outputKey: "text"
+conditions:
+conditions:
+leftValue: "={{ $json.body.message.text }}"
+operator: {"type": "string", "operation": "exists"}
+options:
+fallbackOutput: "extra"
+n8n-nodes-base.googleDocs
+Interacts with Google Docs for reading or writing content.
+Connections Type: main
+Parameters:
+
+operation: "get" or "update" e.g. "get"
+documentURL: Google Doc ID e.g. "[Google Doc ID]"
+n8n-nodes-base.splitOut
+Splits an array field into separate items.
+Connections Type: main
+Parameters:
+
+fieldToSplitOut: Field name e.g. "new_callers"
+options:
+destinationFieldName: "new_tag_name"
+n8n-nodes-base.quickChart
+Generates charts (e.g., pie charts) from data.
+Connections Type: main
+Parameters:
+
+data: Data source e.g. "={{ $json.callers_count }}"
+chartType: "pie"
+labelsArray: "={{ $json.name }}"
+chartOptions:
+width: 600
+n8n-nodes-base.respondToWebhook
+Sends a custom response to a webhook trigger.
+Connections Type: main
+Parameters:
+
+respondWith: "text"
+responseBody: HTML or text e.g. "=<!DOCTYPE html><html>...</html>"
+
+
+#TRIGGERS
+n8n-nodes-base.webhook
+Triggers a workflow when an HTTP request is received at a specified endpoint.
+Connections Type: main
+Parameters:
+
+path: A unique URL path e.g. "wbot"
+httpMethod: "POST" or "GET" e.g. "POST"
+options:
+binaryPropertyName: "data" (optional, specifies where binary data is stored)
+n8n-nodes-base.scheduleTrigger
+Triggers a workflow on a defined schedule.
+Connections Type: main
+Parameters:
+
+rule:
+interval: Defines the frequency e.g. [{"field": "weeks"}] (runs weekly)
+daysOfWeek: Specific days e.g. ["Sunday"]
+n8n-nodes-base.n8nTrigger
+Triggers a workflow based on events within an n8n instance (e.g., workflow activation).
+Connections Type: main
+Parameters:
+
+events: List of event types e.g. ["activate"]
